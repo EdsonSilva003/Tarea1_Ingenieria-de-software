@@ -1,0 +1,3 @@
+Este es la primer tarea usando spring boot, unicamente montamos el proyecto, para ello usamos maven, java y la extension de sprign tools en visual studio. Creamos el programa usando spring init, 
+una vez hecho eso se creo el archivo "holamundo.java" para generar el mensaje y se cambio el puerto 8080 por 8081. Para correr el programa se descarga, una vez hecho eso con el boton de lado derecho seleccionamos "Tarea1IngenieriaApplication.java"
+y seleccionamos la opcion "Run java", una vez hecho eso, nos vamos a la barra del navegador y colocamos "localhost:8081/hello" para poder ver en el navegador el mensaje
