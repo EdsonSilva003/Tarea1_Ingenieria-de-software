@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil</title>
+    <link rel="stylesheet" href="/css/perfil.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Sistema de Recomendaciones</h1>
+    </div>
+    
+    <div class="container">
+        <h2>Mi Perfil</h2>
+        
+        <div class="profile-header">
+            <div class="profile-image">
+                <!-- Si el usuario tiene imagen, mostrarla -->
+                <img th:if="${tieneImagen}" th:src="@{'/usuario/imagen/' + ${usuario.id}}" id="profileImage" alt="Foto de perfil" />
+                <!-- Si no tiene imagen, mostrar icono por defecto -->
+                <span th:unless="${tieneImagen}">👤</span>
+                
+                <!-- Botón para cambiar la imagen -->
+                <label for="fileInput" class="profile-image-upload">+</label>
+                <input type="file" id="fileInput" accept="image/*" class="hidden" />
+            </div>
+            <p class="profile-name" th:text="${usuario.nombre}">Usuario</p>
+            <p class="profile-email" th:text="${usuario.email}">usuario@ejemplo.com</p>
+        </div>
+        
+        <!-- Tabs para separar las secciones -->
+        <div class="tabs">
+            <div class="tab" data-tab="info">Información Personal</div>
+            <div class="tab" data-tab="password">Cambiar Contraseña</div>
+            <div class="tab" data-tab="image">Cambiar Imagen</div>
+        </div>
+        
+        <!-- Tab de Información Personal -->
+        <div id="infoTab" class="tab-content">
+            <form action="/perfil/actualizar-info" method="post">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" th:value="${usuario.nombre}" placeholder="Tu nombre" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" th:value="${usuario.email}" placeholder="Tu email" required />
+                </div>
+                
+                <div class="buttons">
+                    <a href="/home" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-primary">Actualizar Información</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Tab de Cambiar Contraseña -->
+        <div id="passwordTab" class="tab-content">
+            <form action="/perfil/actualizar-password" method="post">
+                <div class="form-group">
+                    <label for="password">Nueva Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="Ingresa tu nueva contraseña" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirma tu nueva contraseña" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="currentPassword">Contraseña Actual</label>
+                    <input type="password" id="currentPassword" name="currentPassword" placeholder="Ingresa tu contraseña actual" required />
+                </div>
+                
+                <div class="buttons">
+                    <a href="/home" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Tab de Cambiar Imagen -->
+        <div id="imageTab" class="tab-content">
+            <form action="/perfil/actualizar-imagen" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="imagenPerfil">Selecciona una nueva imagen de perfil</label>
+                    <input type="file" id="imagenPerfil" name="imagen" accept="image/*" required />
+                </div>
+                
+                <div class="buttons">
+                    <a href="/home" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-primary">Subir Imagen</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Mensaje de resultado -->
+        <div th:if="${mensaje}" class="mensaje" th:classappend="${tipoMensaje == 'error'} ? 'mensaje-error' : 'mensaje-exito'" th:text="${mensaje}">
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar la primera tab como activa por defecto
+            document.querySelector('.tab[data-tab="info"]').classList.add('active');
+            document.getElementById('infoTab').classList.add('active');
+            
+            // Cambio de tabs
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Quitar clases active
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Añadir clase active al tab clickeado y su contenido
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + 'Tab').classList.add('active');
+                });
+            });
+            
+            // Cargar la imagen de perfil
+            const profileImage = document.getElementById('profileImage');
+            if (profileImage) {
+                const userId = profileImage.src.split('/').pop();
+                fetch(`/usuario/imagen/${userId}`)
+                    .then(response => response.text())
+                    .then(base64Image => {
+                        if (base64Image && base64Image.length > 0) {
+                            profileImage.src = `data:image/jpeg;base64,${base64Image}`;
+                        }
+                    })
+                    .catch(error => console.error('Error cargando la imagen:', error));
+            }
+            
+            // Mostrar imagen seleccionada en miniatura
+            const fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        // Redirigir a la tab de imagen
+                        document.querySelector('.tab[data-tab="image"]').click();
+                        // Establecer la imagen seleccionada en el input del formulario
+                        document.getElementById('imagenPerfil').files = fileInput.files;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
